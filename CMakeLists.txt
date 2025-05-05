@@ -1,8 +1,17 @@
 cmake_minimum_required(VERSION 3.31)
-project(VulkanSandbox)
+project(vulkan_sandbox)
 
 set(CMAKE_CXX_STANDARD 26)
 
-add_executable(VulkanSandbox VulkanSandbox/main.cpp)
+find_package(Vulkan REQUIRED)
 
-target_include_directories(VulkanSandbox PUBLIC D:/Development/Projects/C++/Libraries)
+add_executable(vulkan_sandbox sources/main.cpp
+        sources/logging.cpp
+        headers/logging.h
+        headers/json.h
+        sources/json.cpp
+)
+
+target_include_directories(vulkan_sandbox PUBLIC D:/Development/Projects/C++/libraries)
+target_include_directories(vulkan_sandbox PUBLIC headers)
+target_link_libraries(vulkan_sandbox PUBLIC Vulkan::Vulkan)
