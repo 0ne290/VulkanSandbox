@@ -10,6 +10,10 @@ add_executable(vulkan_sandbox sources/main.cpp
         headers/logging.h
         headers/json.h
         sources/json.cpp
+        sources/vulkan.cpp
+        headers/vulkan.h
+        sources/exceptions.cpp
+        headers/exceptions.h
 )
 
 target_include_directories(vulkan_sandbox PUBLIC D:/Development/Projects/C++/libraries)

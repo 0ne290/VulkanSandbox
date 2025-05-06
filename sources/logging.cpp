@@ -4,10 +4,11 @@
 #include "logging.h"
 
 namespace logging {
-    std::shared_ptr<spdlog::logger> create_logger() {
+
+    std::shared_ptr<spdlog::logger> LoggerLifetimeManager::create(const spdlog::level::level_enum logLevel) {
         auto ret = spdlog::rotating_logger_mt<spdlog::async_factory>("logger", "log.json",
             1'073'741'824, 2);
-        ret->set_level(spdlog::level::trace);
+        ret->set_level(logLevel);
         const auto spdlog_tp = spdlog::thread_pool();
 
         ret->set_pattern(R"({"log":[)");
@@ -25,7 +26,7 @@ namespace logging {
         return ret;
     }
 
-    void destroy_logger(const std::shared_ptr<spdlog::logger> &logger) {
+    void LoggerLifetimeManager::destroy(const std::shared_ptr<spdlog::logger> &logger) {
         const auto spdlog_tp = spdlog::thread_pool();
 
         logger->flush();
@@ -43,4 +44,5 @@ namespace logging {
 
         spdlog::shutdown();
     }
+
 }
