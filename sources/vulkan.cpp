@@ -11,6 +11,7 @@ namespace vulkan {
     }
 
     VkInstance& VulkanInstanceLifetimeManager::create() const {
+        // Create instance
         VkInstance ret;
 
         VkApplicationInfo applicationInfo = {
@@ -23,13 +24,46 @@ namespace vulkan {
             nullptr, 0, nullptr
         };
 
-        if (const auto result = vkCreateInstance(&createInfo, nullptr, &ret); result != VK_SUCCESS)
+        auto result = vkCreateInstance(&createInfo, nullptr, &ret);
+        if (result != VK_SUCCESS)
             throw exceptions::CriticalException{LOG_MESSAGE("vulkan", R"("failed to create instance")")};
-        if (ret == nullptr)
-            throw exceptions::CriticalException{LOG_MESSAGE("vulkan", R"("instance is nullptr")")};
         this->logger->info(LOG_MESSAGE("vulkan", R"("instance created")"));
 
+        // Get physical devices
+        uint32_t physicalDeviceCount;
+        result = vkEnumeratePhysicalDevices(ret, &physicalDeviceCount, nullptr);
+        if (result != VK_SUCCESS) {
+            logger->warn(LOG_MESSAGE("vulkan", R"("failed to get physical device count")"));
+
+            return ret;
+        }
+
+        std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+        result = vkEnumeratePhysicalDevices(ret, &physicalDeviceCount, physicalDevices.data());
+        if (result != VK_SUCCESS) {
+            logger->warn(LOG_MESSAGE("vulkan", R"("failed to get physical devices")"));
+
+            return ret;
+        }
+
+        // Get physical devices properties
+        VkPhysicalDeviceProperties physicalDeviceProperties;
+        for (const auto& physicalDevice : physicalDevices) {
+            vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+        }
+
+        // Get physical devices features
+
+        // Get extensions
+
+        // Get layers
+
         return ret;
+    }
+
+    void VulkanInstanceLifetimeManager::destroy(const VkInstance &vulkanInstance) const {
+        vkDestroyInstance(vulkanInstance, nullptr);
+        this->logger->info(LOG_MESSAGE("vulkan", R"("instance destroyed")"));
     }
 
 }

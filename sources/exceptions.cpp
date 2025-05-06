@@ -1,13 +1,12 @@
-#include <string>
 #include "exceptions.h"
 
 namespace exceptions {
 
     CriticalException::CriticalException(const std::string &message) {
-        this->message = message;
+        this->message = message.c_str();
     }
 
-    std::string CriticalException::getMessage() const {
+    const char* CriticalException::what() const {
         return message;
     }
 

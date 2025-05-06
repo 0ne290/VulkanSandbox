@@ -31,7 +31,7 @@ namespace vulkan {
         // Methods
         VkInstance& create() const;
 
-        void destroy(VkInstance&);
+        void destroy(const VkInstance&) const;
 
     private:
 

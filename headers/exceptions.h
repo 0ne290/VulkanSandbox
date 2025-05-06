@@ -5,7 +5,7 @@
 
 namespace exceptions {
 
-    class CriticalException {
+    class CriticalException final : public std::exception {
 
     public:
 
@@ -28,12 +28,12 @@ namespace exceptions {
         //~CriticalException() = delete;
 
         // Methods
-        std::string getMessage() const;
+        [[nodiscard]] const char* what() const override;
 
     private:
 
         // Fields
-        std::string message;
+        const char* message;
 
     };
 
