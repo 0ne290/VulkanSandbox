@@ -1,37 +1,71 @@
 #ifndef LOGGING_H
 
 #define LOGGING_H
-#define LOG_MESSAGE(tag, payload) std::format(R"({{"header":{{"tag":"{}","source":"{}"}},"payload":{}}})", tag, \
-    std::format("{} -> {} : {}", __FUNCTION__, __FILE__, __LINE__), payload)
+#define LOG_MESSAGE_WITHOUT_PAYLOAD(tag, desc) std::format(\
+    R"({{"header":{{"tag":"{}","desc":"{}","source":"{}"}},"payload":null}})", \
+    tag, \
+    desc, \
+    std::format("{} -> {} : {}", __FUNCTION__, __FILE__, __LINE__))
+#define LOG_MESSAGE_WITH_PAYLOAD(tag, desc, payload) std::format(\
+    R"({{"header":{{"tag":"{}","desc":"{}","source":"{}"}},"payload":{}}})", \
+    tag, \
+    desc, \
+    std::format("{} -> {} : {}", __FUNCTION__, __FILE__, __LINE__), \
+    payload)
 
 #include <spdlog/logger.h>
 
 namespace logging {
 
-    class LoggerLifetimeManager {
+    class LoggerWrapper {
 
     public:
 
         // Constructors
-        LoggerLifetimeManager() = delete;
+        LoggerWrapper() = delete;
+
+        explicit LoggerWrapper(const std::shared_ptr<spdlog::logger>&);
 
         // Copy constructors
-        LoggerLifetimeManager(const LoggerLifetimeManager&) = delete;
+        LoggerWrapper(const LoggerWrapper&) = delete;
 
-        LoggerLifetimeManager(LoggerLifetimeManager&&) = delete;
+        LoggerWrapper(LoggerWrapper&&) = delete;
 
         // Operators
-        LoggerLifetimeManager& operator=(const LoggerLifetimeManager&) = delete;
+        LoggerWrapper& operator=(const LoggerWrapper&) = delete;
 
-        LoggerLifetimeManager& operator=(LoggerLifetimeManager&&) = delete;
+        LoggerWrapper& operator=(LoggerWrapper&&) = delete;
 
         // Destructors
-        ~LoggerLifetimeManager() = delete;
+        ~LoggerWrapper();
+
+        // Fields
+        const std::shared_ptr<spdlog::logger> instance;
+
+    };
+
+    class LoggerCreator {
+
+    public:
+
+        // Constructors
+        LoggerCreator() = delete;
+
+        // Copy constructors
+        LoggerCreator(const LoggerCreator&) = delete;
+
+        LoggerCreator(LoggerCreator&&) = delete;
+
+        // Operators
+        LoggerCreator& operator=(const LoggerCreator&) = delete;
+
+        LoggerCreator& operator=(LoggerCreator&&) = delete;
+
+        // Destructors
+        ~LoggerCreator() = delete;
 
         //Methods
-        static std::shared_ptr<spdlog::logger> create(spdlog::level::level_enum logLevel);
-
-        static void destroy(const std::shared_ptr<spdlog::logger> &logger);
+        static std::shared_ptr<LoggerWrapper> create(spdlog::level::level_enum logLevel);
 
     };
 

@@ -28,7 +28,7 @@ namespace exceptions {
         //~CriticalException() = delete;
 
         // Methods
-        [[nodiscard]] const char* what() const override;
+        [[nodiscard]] const char* what() const noexcept override;
 
     private:
 

@@ -1,18 +1,22 @@
 #include "vulkan.h"
 
+#include <iostream>
+
 #include "exceptions.h"
+#include "json.h"
 #include "logging.h"
 
 
 namespace vulkan {
 
-    VulkanInstanceLifetimeManager::VulkanInstanceLifetimeManager(const std::shared_ptr<spdlog::logger> &logger) {
+    // VulkanFacadeCreator
+    VulkanFacadeCreator::VulkanFacadeCreator(const std::shared_ptr<logging::LoggerWrapper> &logger) {
         this->logger = logger;
     }
 
-    VkInstance& VulkanInstanceLifetimeManager::create() const {
+    std::unique_ptr<VulkanFacade> VulkanFacadeCreator::create() const {
         // Create instance
-        VkInstance ret;
+        VkInstance instance;
 
         VkApplicationInfo applicationInfo = {
             VK_STRUCTURE_TYPE_APPLICATION_INFO, nullptr, "vulkan_sandbox", 1,
@@ -24,33 +28,41 @@ namespace vulkan {
             nullptr, 0, nullptr
         };
 
-        auto result = vkCreateInstance(&createInfo, nullptr, &ret);
+        auto result = vkCreateInstance(&createInfo, nullptr, &instance);
         if (result != VK_SUCCESS)
-            throw exceptions::CriticalException{LOG_MESSAGE("vulkan", R"("failed to create instance")")};
-        this->logger->info(LOG_MESSAGE("vulkan", R"("instance created")"));
+            throw exceptions::CriticalException{LOG_MESSAGE_WITHOUT_PAYLOAD("vulkan",
+                json::JsonSerializer::toJson("failed to create instance"))};
+        std::unique_ptr<VulkanFacade> ret(new VulkanFacade(instance, logger));
+        this->logger->instance->info(LOG_MESSAGE_WITHOUT_PAYLOAD("vulkan", "facade created"));
 
         // Get physical devices
         uint32_t physicalDeviceCount;
-        result = vkEnumeratePhysicalDevices(ret, &physicalDeviceCount, nullptr);
+        result = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, nullptr);
         if (result != VK_SUCCESS) {
-            logger->warn(LOG_MESSAGE("vulkan", R"("failed to get physical device count")"));
+            logger->instance->warn(LOG_MESSAGE_WITHOUT_PAYLOAD("vulkan", "failed to get physical device count"));
 
             return ret;
         }
 
         std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
-        result = vkEnumeratePhysicalDevices(ret, &physicalDeviceCount, physicalDevices.data());
+        result = vkEnumeratePhysicalDevices(instance, &physicalDeviceCount, physicalDevices.data());
         if (result != VK_SUCCESS) {
-            logger->warn(LOG_MESSAGE("vulkan", R"("failed to get physical devices")"));
+            logger->instance->warn(LOG_MESSAGE_WITHOUT_PAYLOAD("vulkan", "failed to get physical devices"));
 
             return ret;
         }
+        this->logger->instance->trace(LOG_MESSAGE_WITHOUT_PAYLOAD("vulkan",
+            std::format("got {} physical devices", physicalDeviceCount)));
 
         // Get physical devices properties
         VkPhysicalDeviceProperties physicalDeviceProperties;
-        for (const auto& physicalDevice : physicalDevices) {
-            vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
+        std::vector<VkPhysicalDeviceProperties> physicalDevicesProperties(physicalDeviceCount);
+        for (auto i = 0; i < physicalDevices.size(); i++) {
+            vkGetPhysicalDeviceProperties(physicalDevices[i], &physicalDeviceProperties);
+
+            physicalDevicesProperties[i] = physicalDeviceProperties;
         }
+        this->logger->instance->trace(LOG_MESSAGE_WITH_PAYLOAD("vulkan", "got physical devices properties", json::JsonSerializer::toJson(physicalDevicesProperties)));
 
         // Get physical devices features
 
@@ -61,9 +73,15 @@ namespace vulkan {
         return ret;
     }
 
-    void VulkanInstanceLifetimeManager::destroy(const VkInstance &vulkanInstance) const {
-        vkDestroyInstance(vulkanInstance, nullptr);
-        this->logger->info(LOG_MESSAGE("vulkan", R"("instance destroyed")"));
+    // VulkanFacade
+    VulkanFacade::VulkanFacade(const VkInstance &instance, const std::shared_ptr<logging::LoggerWrapper> &logger) {
+        this->instance = instance;
+        this->logger = logger;
+    }
+
+    VulkanFacade::~VulkanFacade() {
+        vkDestroyInstance(this->instance, nullptr);
+        this->logger->instance->info(LOG_MESSAGE_WITHOUT_PAYLOAD("vulkan", "facade destroyed"));
     }
 
 }

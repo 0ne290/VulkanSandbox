@@ -6,7 +6,7 @@ namespace exceptions {
         this->message = message.c_str();
     }
 
-    const char* CriticalException::what() const {
+    const char* CriticalException::what() const noexcept {
         return message;
     }
 

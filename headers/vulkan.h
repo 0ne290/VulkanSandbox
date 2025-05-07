@@ -4,39 +4,70 @@
 #include <spdlog/logger.h>
 #include <vulkan/vulkan_core.h>
 
-namespace vulkan {
+#include "logging.h"
 
-    class VulkanInstanceLifetimeManager {
+namespace vulkan {
+    class VulkanFacade;
+
+    class VulkanFacadeCreator {
 
     public:
 
         // Constructors
-        VulkanInstanceLifetimeManager() = delete;
+        VulkanFacadeCreator() = delete;
 
-        VulkanInstanceLifetimeManager(const std::shared_ptr<spdlog::logger> &);
+        explicit VulkanFacadeCreator(const std::shared_ptr<logging::LoggerWrapper> &);
 
         // Copy constructors
-        VulkanInstanceLifetimeManager(const VulkanInstanceLifetimeManager&) = delete;
+        VulkanFacadeCreator(const VulkanFacadeCreator&) = delete;
 
-        VulkanInstanceLifetimeManager(VulkanInstanceLifetimeManager&&) = delete;
+        VulkanFacadeCreator(VulkanFacadeCreator&&) = delete;
 
         // Operators
-        VulkanInstanceLifetimeManager& operator=(const VulkanInstanceLifetimeManager&) = delete;
+        VulkanFacadeCreator& operator=(const VulkanFacadeCreator&) = delete;
 
-        VulkanInstanceLifetimeManager& operator=(VulkanInstanceLifetimeManager&&) = delete;
+        VulkanFacadeCreator& operator=(VulkanFacadeCreator&&) = delete;
 
         // Destructors
-        ~VulkanInstanceLifetimeManager() = delete;
+        //~VulkanFacadeCreator() = delete;
 
         // Methods
-        VkInstance& create() const;
-
-        void destroy(const VkInstance&) const;
+        [[nodiscard]] std::unique_ptr<VulkanFacade> create() const;
 
     private:
 
         // Fields
-        std::shared_ptr<spdlog::logger> logger;
+        std::shared_ptr<logging::LoggerWrapper> logger;
+
+    };
+
+    class VulkanFacade {
+
+    public:
+        // Constructors
+        VulkanFacade() = delete;
+
+        VulkanFacade(const VkInstance &, const std::shared_ptr<logging::LoggerWrapper> &);
+
+        // Copy constructors
+        VulkanFacade(const VulkanFacade&) = delete;
+
+        VulkanFacade(VulkanFacade&&) = delete;
+
+        // Operators
+        VulkanFacade& operator=(const VulkanFacade&) = delete;
+
+        VulkanFacade& operator=(VulkanFacade&&) = delete;
+
+        // Destructors
+        ~VulkanFacade();
+
+    private:
+
+        // Fields
+        VkInstance instance;
+
+        std::shared_ptr<logging::LoggerWrapper> logger;
 
     };
 

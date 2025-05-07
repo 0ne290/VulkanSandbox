@@ -5,42 +5,44 @@
 
 namespace logging {
 
-    std::shared_ptr<spdlog::logger> LoggerLifetimeManager::create(const spdlog::level::level_enum logLevel) {
-        auto ret = spdlog::rotating_logger_mt<spdlog::async_factory>("logger", "log.json",
+    std::shared_ptr<LoggerWrapper> LoggerCreator::create(const spdlog::level::level_enum logLevel) {
+        const auto logger = spdlog::rotating_logger_mt<spdlog::async_factory>("logger", "log.json",
             1'073'741'824, 2);
-        ret->set_level(logLevel);
+        logger->set_level(logLevel);
         const auto spdlog_tp = spdlog::thread_pool();
 
-        ret->set_pattern(R"({"log":[)");
-        ret->info("");
-        ret->flush();
+        logger->set_pattern(R"({"log":[)");
+        logger->info("");
+        logger->flush();
         while (spdlog_tp->queue_size() != 0)
             std::this_thread::yield();
 
-        ret->set_pattern(R"({"time":"%Y-%m-%d %H:%M:%S.%e","level":"%l","process":%P,"thread":%t,"message":%v},)");
-        ret->info(LOG_MESSAGE("logger", R"("created")"));
-        ret->flush();
+        logger->set_pattern(R"({"time":"%Y-%m-%d %H:%M:%S.%e","level":"%l","process":%P,"thread":%t,"message":%v},)");
+        logger->info(LOG_MESSAGE_WITHOUT_PAYLOAD("logger", "wrapper created"));
+        logger->flush();
         while (spdlog_tp->queue_size() != 0)
             std::this_thread::yield();
 
-        return ret;
+        return std::make_shared<LoggerWrapper>(logger);
     }
 
-    void LoggerLifetimeManager::destroy(const std::shared_ptr<spdlog::logger> &logger) {
+    LoggerWrapper::LoggerWrapper(const std::shared_ptr<spdlog::logger> &logger) : instance(logger) { }
+
+    LoggerWrapper::~LoggerWrapper() {
         const auto spdlog_tp = spdlog::thread_pool();
 
-        logger->flush();
+        instance->flush();
         while (spdlog_tp->queue_size() != 0)
             std::this_thread::yield();
 
-        logger->set_pattern(R"({"time":"%Y-%m-%d %H:%M:%S.%e","level":"%l","process":%P,"thread":%t,"message":%v})");
-        logger->info(LOG_MESSAGE("logger", R"("destroyed")"));
-        logger->flush();
+        instance->set_pattern(R"({"time":"%Y-%m-%d %H:%M:%S.%e","level":"%l","process":%P,"thread":%t,"message":%v})");
+        instance->info(LOG_MESSAGE_WITHOUT_PAYLOAD("logger", "wrapper destroyed"));
+        instance->flush();
         while (spdlog_tp->queue_size() != 0)
             std::this_thread::yield();
 
-        logger->set_pattern("]}");
-        logger->info("");
+        instance->set_pattern("]}");
+        instance->info("");
 
         spdlog::shutdown();
     }

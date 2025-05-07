@@ -1,15 +1,19 @@
+#include "exceptions.h"
 #include "logging.h"
-#include <vulkan/vulkan.h>
+#include "vulkan.h"
 
 int main() {
-    const auto logger = logging::LoggerLifetimeManager::create(spdlog::level::trace);
+    const auto logger = logging::LoggerCreator::create(spdlog::level::trace);
 
-    uint32_t extensionCount{};
-    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+    try {
+        const auto vulkanFacadeCreator = vulkan::VulkanFacadeCreator(logger);
 
-    logger->trace(LOG_MESSAGE("vulkan", std::format(R"("{} extensions available")", extensionCount)));
+        const auto vulkanFacade = vulkanFacadeCreator.create();
 
-    logging::LoggerLifetimeManager::destroy(logger);
+        return 0;
+    } catch (exceptions::CriticalException &ex) {
+        logger->instance->critical(ex.what());
 
-    return 0;
+        return 1;
+    }
 }
