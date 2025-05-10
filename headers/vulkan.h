@@ -32,7 +32,7 @@ namespace vulkan {
         //~VulkanFacadeCreator() = delete;
 
         // Methods
-        [[nodiscard]] std::unique_ptr<VulkanFacade> create() const;
+        [[nodiscard]] std::shared_ptr<VulkanFacade> create() const;
 
     private:
 
@@ -44,6 +44,7 @@ namespace vulkan {
     class VulkanFacade {
 
     public:
+
         // Constructors
         VulkanFacade() = delete;
 
@@ -61,6 +62,13 @@ namespace vulkan {
 
         // Destructors
         ~VulkanFacade();
+
+        // Methods
+        void logPhysicalDevices() const;
+
+        void logExtensions() const;
+
+        void logLayers() const;
 
     private:
 

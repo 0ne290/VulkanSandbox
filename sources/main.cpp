@@ -9,9 +9,10 @@ int main() {
         const auto vulkanFacadeCreator = vulkan::VulkanFacadeCreator(logger);
 
         const auto vulkanFacade = vulkanFacadeCreator.create();
+        vulkanFacade->logPhysicalDevices();
 
         return 0;
-    } catch (exceptions::CriticalException &ex) {
+    } catch (const exceptions::CriticalException &ex) {
         logger->instance->critical(ex.what());
 
         return 1;

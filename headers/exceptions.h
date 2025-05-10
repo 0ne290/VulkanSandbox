@@ -12,7 +12,7 @@ namespace exceptions {
         // Constructors
         CriticalException() = delete;
 
-        explicit CriticalException(const std::string &message);
+        explicit CriticalException(std::string message);
 
         // Copy constructors
         CriticalException(const CriticalException&) = delete;
@@ -25,7 +25,7 @@ namespace exceptions {
         CriticalException& operator=(CriticalException&&) = delete;
 
         // Destructors
-        //~CriticalException() = delete;
+        //~CriticalException() override = delete;
 
         // Methods
         [[nodiscard]] const char* what() const noexcept override;
@@ -33,7 +33,7 @@ namespace exceptions {
     private:
 
         // Fields
-        const char* message;
+        const std::string message;
 
     };
 

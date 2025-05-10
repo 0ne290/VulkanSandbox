@@ -9,30 +9,41 @@ namespace json {
         return std::format(R"("{}")", text);
     }
 
-    std::string JsonSerializer::toJson(const std::vector<VkPhysicalDeviceProperties> &devicesProperties) {
+    std::string toString(const VkPhysicalDeviceType deviceType) {
+        static const std::string stringsByDeviceType[5] = {
+            "OTHER", "INTEGRATED_GPU", "DISCRETE_GPU", "VIRTUAL_GPU", "CPU"
+        };
+
+        return stringsByDeviceType[deviceType];
+    }
+
+    // ReSharper disable once CppDFAConstantFunctionResult
+    std::string JsonSerializer::toJson(const std::vector<VkPhysicalDevice> &devices, void
+        (*& getProperties)(const VkPhysicalDevice&, VkPhysicalDeviceProperties&)) {
+        VkPhysicalDeviceProperties properties;
         std::string ret("[");
 
-        for (auto i = 0; i < devicesProperties.size() - 1; i++) {
-            auto properties = devicesProperties[i];
+        for (auto i = 0; i < devices.size() - 1; i++) {
+            getProperties(devices[i], properties);
             ret.append(std::format(
-                R"({{"apiVersion":{},"driverVersion":{},"vendorId":{},"deviceId":{},"deviceType":"stub","deviceName":{}}},)",
+                R"({{"apiVersion":{},"driverVersion":{},"vendorId":{},"deviceId":{},"deviceType":"{}","deviceName":"{}"}},)",
                 properties.apiVersion,
                 properties.driverVersion,
                 properties.vendorID,
                 properties.deviceID,
-                //properties.deviceType,
+                toString(properties.deviceType),
                 properties.deviceName
                 ));
         }
 
-        auto properties = devicesProperties[devicesProperties.size() - 1];
+        getProperties(devices[devices.size() - 1], properties);
         ret.append(std::format(
-            R"({{"apiVersion":{},"driverVersion":{},"vendorId":{},"deviceId":{},"deviceType":"stub","deviceName":{}}})",
+            R"({{"apiVersion":{},"driverVersion":{},"vendorId":{},"deviceId":{},"deviceType":"{}","deviceName":"{}"}})",
             properties.apiVersion,
             properties.driverVersion,
             properties.vendorID,
             properties.deviceID,
-            //properties.deviceType,
+            toString(properties.deviceType),
             properties.deviceName
             ));
 

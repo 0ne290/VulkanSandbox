@@ -2,12 +2,10 @@
 
 namespace exceptions {
 
-    CriticalException::CriticalException(const std::string &message) {
-        this->message = message.c_str();
-    }
+    CriticalException::CriticalException(std::string message) : message(std::move(message)) { }
 
     const char* CriticalException::what() const noexcept {
-        return message;
+        return message.c_str();
     }
 
 }

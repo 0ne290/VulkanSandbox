@@ -31,7 +31,8 @@ namespace json {
         // Methods
         static std::string toJson(const std::string&);
 
-        static std::string toJson(const std::vector<VkPhysicalDeviceProperties>&);
+        static std::string toJson(const std::vector<VkPhysicalDevice>&,
+            void (*&)(const VkPhysicalDevice&, VkPhysicalDeviceProperties&));
 
     };
 
